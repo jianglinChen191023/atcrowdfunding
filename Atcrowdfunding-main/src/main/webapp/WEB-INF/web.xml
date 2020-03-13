@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	id="WebApp_ID" version="2.5">
+
+	<display-name>crowdfunding</display-name>
+
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath*:spring/spring-*.xml</param-value>
+	</context-param>
+
+	<!-- 监听器: 创建Spring框架的IOC容器 . 将IOC容器对象存放到application域. 在application域里吧IOC容器取出来.怎么取? 
+		ApplicationContext ioc = WebApplicationUtils.getWebApplicationContext(appcation); 
+		ServletContextListener监听器接口: 监听ServletContext创建和销毁 如果监听到ServletContext创建(服务器启动),就会创建IOC容器(XmlWebApplicationContext) 
+		如果监听到ServletConetxt销毁(服务器停止或卸载项目),就会销毁IOC容器 -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+
+	<listener>
+		<listener-class>com.atguigu.atcrowdfunding.listener.StartSystemListener</listener-class>
+	</listener>
+
+	<!-- 加载log4j的配置文件log4j.properties -->
+	<context-param>
+		<param-name>log4jConfigLocation</param-name>
+		<param-value>classpath:log4j.properties</param-value><!-- classpath*:log4j.properties -->
+	</context-param>
+
+	<!-- 加载Spring框架中的log4j监听器Log4jConfigListener -->
+	<listener>
+		<listener-class>org.springframework.web.util.Log4jConfigListener</listener-class>
+	</listener>
+
+	<!-- 字符编码过滤器 什么是过滤器? 怎么开发 怎么配置 作用是什么? 所有的过滤器都要实现Filter接口 init、destroy方法执行一次 
+		doFilter匹配到几次执行几次 FilterConfig 读取init-param 过滤器的作用: 调用目标资源之前，执行某些功能 是否调用目标资源（即是否让用户访问web资源） 
+		调用目标资源之后，执行某些功能 (对目标访问前或访问后进行过滤) 应用场景 自动登录 统一设置编码格式 访问权限控制 敏感字符过滤等 过滤器过滤规则 
+		过滤器默认对请求进行过滤,对象服务器内部资源转发背景下过滤 需求希望服务器内部资源转发郁金香过滤,在<filter-maopping>中增加转发过滤设置 
+		<dispatcher>REQUEST</dispatcher> <dispatcher>FORWARD<dispatcher> -->
+	<filter>
+		<filter-name>encoding</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class><!--字符编号过滤器: 
+			只能解决POST请求的乱码问题,不能解决GET请求乱码问题. 扩展: 解决GET请求乱码问题: 在Tomcat/conf/server.xml中设置编码 
+			<Connector URLEncoding="UTF-8" connectionTimeout="20000" post="8080" protocol="HTTP/1.1" 
+			redirectPort="8443"/> -->
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+		<init-param>
+			<param-name>forceEncoding</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>encoding</filter-name>
+		<url-pattern>/*</url-pattern>
+		<!-- 对请求和转发 过滤 默认对请求过滤 对转发不过滤 <dispatcher>FORWARD</dispatcher> 请求 <dispatcher>REQUEST</dispatcher> 
+			转发 -->
+	</filter-mapping>
+
+	<!-- 支持RESTful风格 将POST请求转换为PUT孩DELETE请求. 会读取隐含参数:"_method" -->
+	<filter>
+		<filter-name>HiddenHttpMethodFilter</filter-name>
+		<filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>HiddenHttpMethodFilter</filter-name>
+		<servlet-name>springmvc</servlet-name>
+	</filter-mapping>
+
+	<servlet>
+		<servlet-name>springmvc</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<init-param>
+			<param-name>contextConfigLocation</param-name>
+			<param-value>classpath:spring/springmvc-context.xml</param-value>
+		</init-param>
+		<!-- servlet 服务连接器 servlet生命周期 从加载、初始化、服务到销毁的一个过程 -->
+		<!--加载并初始化这个servlet。 正数的值越小，该Servlet的优先级就越高，应用启动时就优先加载。 -->
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>springmvc</servlet-name>
+		<!-- 扩展匹配 -->
+		<url-pattern>*.htm</url-pattern>
+		<url-pattern>*.do</url-pattern>
+ 
+		<!--
+		精确匹配 <url-pattern>/user/save</url-pattern>
+		路径匹配 <url-pattern>/user/*</url-pattern>
+		<url-pattern>/*</url-pattern>
+		默认匹配 <url-pattern>/</url-pattern> -->
+	</servlet-mapping>
+
+	<!-- 会话超时时间 -->
+	<session-config>
+		<session-timeout>60</session-timeout>
+	</session-config>
+
+	<welcome-file-list>
+		<welcome-file>index.jsp</welcome-file>
+	</welcome-file-list>
+
+</web-app>

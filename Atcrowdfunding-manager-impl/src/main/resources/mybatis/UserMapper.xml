@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.atcrowdfunding.manager.dao.UserMapper">
+  <resultMap id="BaseResultMap" type="com.atguigu.atcrowdfunding.bean.User">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="loginacct" jdbcType="VARCHAR" property="loginacct" />
+    <result column="userpswd" jdbcType="CHAR" property="userpswd" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="createtime" jdbcType="CHAR" property="createtime" />
+  </resultMap>
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from t_user
+    where id = #{id,jdbcType=INTEGER}
+  </delete>																		<!-- useGeneratedKeys="true" keyProperty="id"
+  																					组件回填 -->
+  <insert id="insert" parameterType="com.atguigu.atcrowdfunding.bean.User" useGeneratedKeys="true" keyProperty="id">
+    insert into t_user (id, loginacct, userpswd, 
+      username, email, createtime
+      )
+    values (#{id,jdbcType=INTEGER}, #{loginacct,jdbcType=VARCHAR}, #{userpswd,jdbcType=CHAR}, 
+      #{username,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR}, #{createtime,jdbcType=CHAR}
+      )
+  </insert>
+  <update id="updateByPrimaryKey" parameterType="com.atguigu.atcrowdfunding.bean.User">
+    update t_user
+    set username = #{username,jdbcType=VARCHAR},
+      email = #{email,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select id, loginacct, userpswd, username, email, createtime
+    from t_user
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap">
+    select id, loginacct, userpswd, username, email, createtime
+    from t_user
+  </select>
+
+  <select id="getUserLogin" parameterType="map" resultMap="BaseResultMap">
+  	  select id, loginacct, userpswd, username, email, createtime
+      from t_user where loginacct=#{loginacct} and userpswd=#{userpswd}
+  </select>
+  
+<!--   <select id="queryList" resultMap="BaseResultMap"> -->
+<!--   	  select id, loginacct, userpswd, username, email, createtime -->
+<!--       from t_user limit #{startIndex},#{pagesize} -->
+<!--   </select> -->
+  
+<!--   <select id="queryCount" resultType="int"> -->
+<!--   	  select count(*) -->
+<!--       from t_user -->
+<!--   </select> -->
+  
+  <select id="queryList" resultMap="BaseResultMap">
+  	  select id, loginacct, userpswd, username, email, createtime
+      from t_user 
+      <where>
+		<if test="queryText != null">
+			loginacct like CONCAT('%',#{queryText},'%')  
+		</if>
+       </where>
+      order by createtime desc 
+      limit #{startIndex},#{pagesize} 
+  </select>
+  
+  <select id="queryCount" resultType="int">
+  	  select count(*)
+      from t_user
+      <where>
+		<if test="queryText!=null">
+			AND loginacct like CONCAT('%',#{queryText},'%')
+		</if>
+		<if test="loginacct!=null">
+			AND loginacct = #{loginacct} 
+		</if>
+		<if test="username!=null">
+			AND username = #{username}
+		</if>
+		<if test="email!=null">
+			AND email = #{email}
+		</if>
+       </where>
+  </select>
+  
+  <!-- 
+ foreach
+  如果Mapper接口参数类型为Collection集合,那么,可以使用list来获取这个集合参数
+  如果Mapper接口参数类型为Array数组,那么,可以使用array来获取这个数组参数
+ 
+  方法参数只有一个的时候,可以使用"_parameter"来代替.在if标签上可以做测试 
+   -->
+  <delete id="deleteBatchUserByVO" >
+    delete from t_user
+    where id in 
+    <foreach collection="list" open="(" close=")" separator="," item="user">
+    	#{user.id}
+    </foreach>
+    
+  </delete>	
+	
+  <select id="queryAllRole" resultType="Role">
+  	  select id,name
+      from t_role ; 
+  </select>
+  
+  <select id="queryRoleByUserid" parameterType="int" resultType="int">
+  	  select roleid
+      from t_user_role
+      where userid=#{id}
+  </select>
+  
+  <insert id="saveUserRoleRelationship" >
+    <foreach collection="data.ids" item="roleid" separator=";">
+    	insert into t_user_role(userid, roleid) values (#{userid},#{roleid})
+    </foreach>
+  </insert>
+  
+  <delete id="deleteUserRoleRelationship">
+  	delete from t_user_role where userid = #{userid} and roleid in
+  	<foreach collection="data.ids" item="roleid" open="(" separator="," close=")">
+    	#{roleid}
+    </foreach>
+  </delete>
+  
+  <select id="queryPermissionByUserid" parameterType="int" resultType="permission">
+  	 SELECT DISTINCT t_permission.* FROM t_user 
+ 	 LEFT JOIN t_user_role ON t_user.id = t_user_role.userid
+	 LEFT JOIN t_role ON t_user_role.roleid = t_role.id
+	 LEFT JOIN t_role_permission ON t_role.id = t_role_permission.roleid
+	 LEFT JOIN t_permission ON t_role_permission.permissionid = t_permission.id
+	 WHERE t_user.id=#{id} ORDER BY t_permission.id
+  </select>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+</mapper>
